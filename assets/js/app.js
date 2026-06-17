@@ -1001,7 +1001,13 @@ async function boot() {
     document.body.dataset.scrollY = String(scrollY);
     document.body.classList.add("drawer-open");
     document.getElementById(which).classList.add("open");
-    document.getElementById("modal-overlay").classList.add("active");
+    // Only show the modal overlay for the filter drawer. The subnav
+    // is full-screen so there is no "outside" to tap.
+    if (which === "filters") {
+      document.getElementById("modal-overlay").classList.add("active");
+    } else {
+      document.getElementById("modal-overlay").classList.remove("active");
+    }
   }
 
   // Close any open drawer (called by overlay tap, close buttons, Escape, swipe-down)
@@ -1024,6 +1030,17 @@ async function boot() {
 
   // Tap outside the drawer to close it
   document.getElementById("modal-overlay").addEventListener("click", closeDrawer);
+
+  // The topbar is z:100, above the modal overlay (z:95), so taps on the
+  // topbar don't reach the overlay. To make tap-outside work, also
+  // close the drawer when the user taps anywhere on the topbar (except
+  // the menu-toggle, which toggles the subnav).
+  document.querySelector(".topbar")?.addEventListener("click", (e) => {
+    if (document.body.classList.contains("drawer-open") &&
+        !e.target.closest("#menu-toggle")) {
+      closeDrawer();
+    }
+  });
 
   // Escape key closes the active drawer
   document.addEventListener("keydown", (e) => {

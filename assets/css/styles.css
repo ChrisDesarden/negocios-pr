@@ -1058,11 +1058,10 @@ footer {
    ========================================================================== */
 
 /* Z-index hierarchy:
-   110  full-screen menu (subnav as overlay menu)
-   100  topbar (sticky, always on top)
-   95   modal overlay (closes drawers on tap)
-   90   filter drawer (bottom sheet)
-   80   results-header
+   120  subnav (full-screen mobile menu, translucent)
+   110  filter drawer (bottom sheet, above overlay)
+   100  topbar (sticky, always on top of page)
+   95   modal overlay (sits between page and filter drawer, catches tap-outside)
    10   sticky elements
    0    map-pane (always under everything, never on top of UI)
 */
@@ -1153,8 +1152,10 @@ body.drawer-open {
   }
 
   /* Subnav: full-screen overlay menu on mobile.
-     It covers the topbar (z:100) with z:110. The topbar stays visible
-     and clickable, but the subnav stretches edge to edge below it. */
+     It covers the topbar (z:100) with z:120. The topbar stays visible
+     and clickable, but the subnav stretches edge to edge below it.
+     Translucent + backdrop-filter blur so the content behind shows
+     through (matches the frosted-glass aesthetic of the topbar). */
   .subnav {
     display: none;
     position: fixed;
@@ -1163,17 +1164,20 @@ body.drawer-open {
     align-items: stretch;
     gap: 4px;
     padding: 0;
-    background: var(--bg);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: saturate(180%) blur(28px);
+    backdrop-filter: saturate(180%) blur(28px);
     border: none;
     box-shadow: none;
-    z-index: 110;
+    z-index: 120;
     max-height: none;
     overflow-y: auto;
     transform: translateY(-12px);
     opacity: 0;
     transition: transform 0.25s var(--ease-out), opacity 0.2s var(--ease);
+  }
+  [data-theme="dark"] .subnav {
+    background: rgba(28, 28, 30, 0.72);
   }
   .subnav.open {
     display: flex;
@@ -1183,13 +1187,16 @@ body.drawer-open {
   .subnav .subnav-head {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 16px;
-    background: var(--bg-glass);
+    background: rgba(255, 255, 255, 0.85);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     backdrop-filter: saturate(180%) blur(20px);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
     z-index: 1;
+  }
+  [data-theme="dark"] .subnav .subnav-head {
+    background: rgba(28, 28, 30, 0.85);
   }
   .subnav .subnav-title {
     font-size: 1.05rem; font-weight: 700;
@@ -1201,8 +1208,15 @@ body.drawer-open {
     font-size: 1.05rem;
     font-weight: 500;
     border-bottom: 1px solid var(--border);
+    color: var(--text);
   }
   .subnav a:last-of-type { border-bottom: none; }
+  .subnav a:hover { background: rgba(0, 0, 0, 0.04); }
+  [data-theme="dark"] .subnav a:hover { background: rgba(255, 255, 255, 0.06); }
+  .subnav a.active {
+    color: var(--primary);
+    background: rgba(0, 131, 143, 0.08);
+  }
 
   .lang-switch button, .theme-switch button { padding: 4px 8px; }
   .brand .tag { display: none; }
@@ -1217,14 +1231,17 @@ body.drawer-open {
   .explore-layout { grid-template-columns: 1fr; }
 
   /* Filter drawer: bottom-sheet with safe spacing for the map.
-     z: 90 (below subnav 110 and topbar 100). The map (z: 0) is always
-     below the drawer, so the drawer fully covers the map when open. */
+     z: 110 (above the modal overlay at 95) so taps on the filter body
+     go to the filter, not the overlay. The overlay sits behind the
+     filter and closes it on tap-outside. The map (z: 0) is always
+     below the drawer. The drawer also has its own frosted-glass
+     background so the blurred page content shows through subtly. */
   .filters {
     position: fixed;
     bottom: 0; left: 0; right: 0;
     top: auto;
     max-height: 70vh;
-    z-index: 90;
+    z-index: 110;
     border-right: none;
     border-top: 1px solid var(--border);
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
@@ -1232,6 +1249,12 @@ body.drawer-open {
     transition: transform 0.3s var(--ease-out);
     box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
     padding: 48px 16px calc(20px + env(safe-area-inset-bottom, 0));
+    background: rgba(255, 255, 255, 0.96);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+  [data-theme="dark"] .filters {
+    background: rgba(28, 28, 30, 0.96);
   }
   .filters.open { transform: translateY(0); }
   /* Add a drag handle on top of the filter drawer */
