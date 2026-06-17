@@ -262,7 +262,12 @@ input:focus, select:focus, textarea:focus {
 }
 /* Hamburger morphs to X when subnav is open */
 #menu-toggle { transition: transform 0.2s var(--ease); }
-body.drawer-open #menu-toggle {
+/* Only style the hamburger as "active" when the subnav (the actual
+   menu it controls) is open. When the filters drawer is open, the
+   hamburger should keep its normal color — otherwise it looks like
+   the hamburger itself is the active state. We use the body class
+   `drawer-subnav-open` for this distinction. */
+body.drawer-subnav-open #menu-toggle {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
@@ -565,7 +570,10 @@ main { flex: 1; display: flex; flex-direction: column; }
   backdrop-filter: saturate(180%) blur(20px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  z-index: 70; display: none;
+  /* z-index above the filters drawer (110) and the modal overlay (95),
+     and at the topbar level (100). When the combo is open, the list
+     is moved to <body> (portal), so this z-index applies globally. */
+  z-index: 200; display: none;
   box-shadow: var(--shadow-xl);
   padding: 6px;
 }
@@ -1250,6 +1258,12 @@ body.drawer-open {
     border-right: none;
     border-top: 1px solid var(--border);
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    /* Use bottom-based animation instead of transform so the .combo-list
+       (a position:fixed descendant) is anchored to the viewport, not the
+       drawer. transform on an ancestor makes position:fixed children
+       be positioned relative to that ancestor, which broke the
+       municipality dropdown on mobile (it appeared way above the
+       input). */
     transform: translateY(100%);
     transition: transform 0.3s var(--ease-out);
     box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
@@ -1258,7 +1272,9 @@ body.drawer-open {
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     backdrop-filter: saturate(180%) blur(20px);
   }
-  .filters.open { transform: translateY(0); }
+  .filters.open {
+    transform: translateY(0);
+  }
   /* Add a drag handle on top of the filter drawer */
   .filters::before {
     content: '';

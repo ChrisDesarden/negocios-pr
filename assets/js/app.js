@@ -172,7 +172,18 @@ function showView(name) {
   document.getElementById("subnav").classList.remove("open");
   document.getElementById("filters").classList.remove("open");
   document.body.classList.remove("drawer-open");
+  document.body.classList.remove("drawer-subnav-open");
+  document.body.classList.remove("drawer-filters-open");
   document.getElementById("modal-overlay")?.classList.remove("active");
+  // Reset the hamburger button to the closed state (☰ + open_menu
+  // aria-label). Without this, picking a destination from the menu
+  // leaves the icon as ✕ because showView() closes the subnav via
+  // class manipulation rather than going through the toggle handler.
+  const menuBtn = document.getElementById("menu-toggle");
+  if (menuBtn) {
+    menuBtn.textContent = "☰";
+    menuBtn.setAttribute("aria-label", t("nav.open_menu"));
+  }
   if (name === "explore") renderList();
   if (name === "detail") renderDetail();
   if (name === "submit") renderForm();
@@ -384,8 +395,23 @@ function positionComboList() {
   const list = document.getElementById("municipality-list");
   if (!input || !list) return;
   const r = input.getBoundingClientRect();
+  // The dropdown uses position:fixed. To make this work correctly on
+  // mobile (where the combo sits inside the filters drawer, which is
+  // also position:fixed), we temporarily move the list to <body> when
+  // open. This escapes the drawer's containing-block chain so the
+  // fixed positioning is relative to the viewport.
+  // If the dropdown would overflow the bottom of the viewport, flip it
+  // above the input instead of below.
+  const spaceBelow = window.innerHeight - r.bottom;
+  const listMaxH = 280;
+  if (spaceBelow < listMaxH && r.top > listMaxH) {
+    list.style.top = (r.top - listMaxH - 2) + "px";
+    list.style.bottom = "auto";
+  } else {
+    list.style.top = (r.bottom + 2) + "px";
+    list.style.bottom = "auto";
+  }
   list.style.left = r.left + "px";
-  list.style.top = r.bottom + 2 + "px";
   list.style.width = r.width + "px";
 }
 
@@ -396,8 +422,29 @@ function bindMunicipalityCombo() {
   const clear = document.getElementById("municipality-clear");
   if (!input) return;
 
-  function open() { list.classList.add("open"); renderMunicipalityCombo(); positionComboList(); }
-  function close() { list.classList.remove("open"); }
+  function open() {
+    // Portal: temporarily move the list to <body> so position:fixed is
+    // relative to the viewport (not the filters drawer's containing
+    // block). Restore it on close.
+    if (list.parentElement !== document.body) {
+      list._origParent = list.parentElement;
+      list._origNext = list.nextSibling;
+      document.body.appendChild(list);
+    }
+    list.classList.add("open");
+    renderMunicipalityCombo();
+    positionComboList();
+  }
+  function close() {
+    list.classList.remove("open");
+    // Restore the list to its original DOM location so it doesn't get
+    // re-positioned globally.
+    if (list._origParent) {
+      list._origParent.insertBefore(list, list._origNext);
+      list._origParent = null;
+      list._origNext = null;
+    }
+  }
   function selectItem(m) {
     state.municipalities = new Set([m]);
     input.value = m;
@@ -543,15 +590,31 @@ function initMap() {
   if (mapInitialized) return;
   const el = document.getElementById("map-pane");
   if (!el) return;  // not in DOM (different view)
-  // On mobile: disable drag so vertical swipes scroll the page instead of
-  // panning the map. touch-action: pan-x on the container still allows
-  // horizontal swipes to pan (Leaflet respects touch-action). Wheel zoom
-  // is also off on mobile so the user can scroll the page past the map.
-  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  // On mobile, disable drag/wheel-zoom/tap on the Leaflet map so the
+  // page scroll feels natural: vertical swipes scroll the page, not
+  // pan the map. We use a matchMedia listener so the setting flips
+  // live when the user rotates their device or resizes the window.
+  // touch-action: pan-x on the container still allows horizontal
+  // swipes to pan (Leaflet respects touch-action).
+  const mql = window.matchMedia("(max-width: 768px)");
+  const applyMobileSettings = () => {
+    const isMobile = mql.matches;
+    if (map) {
+      if (isMobile) {
+        map.dragging.disable();
+        map.scrollWheelZoom.disable();
+        map.tap?.disable();
+      } else {
+        map.dragging.enable();
+        map.scrollWheelZoom.enable();
+        map.tap?.enable();
+      }
+    }
+  };
   map = L.map("map-pane", {
-    scrollWheelZoom: !isMobile,
-    dragging: !isMobile,
-    tap: !isMobile
+    scrollWheelZoom: !mql.matches,
+    dragging: !mql.matches,
+    tap: !mql.matches
   }).setView([18.2208, -66.5901], 9);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
@@ -559,6 +622,8 @@ function initMap() {
   }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
   mapInitialized = true;
+  // Re-apply mobile/desktop settings when the viewport crosses the breakpoint
+  mql.addEventListener("change", applyMobileSettings);
 }
 
 function updateMap(filtered) {
@@ -1000,6 +1065,14 @@ async function boot() {
     const scrollY = window.scrollY;
     document.body.dataset.scrollY = String(scrollY);
     document.body.classList.add("drawer-open");
+    // Tag which drawer is open so the hamburger can show the "active"
+    // teal state only when the subnav (its own drawer) is open, not
+    // when the filters drawer is open.
+    if (which === "subnav") {
+      document.body.classList.add("drawer-subnav-open");
+    } else {
+      document.body.classList.add("drawer-filters-open");
+    }
     document.getElementById(which).classList.add("open");
     // Only show the modal overlay for the filter drawer. The subnav
     // is full-screen so there is no "outside" to tap.
@@ -1016,6 +1089,8 @@ async function boot() {
     document.getElementById("filters").classList.remove("open");
     document.getElementById("filters").style.transform = "";
     document.body.classList.remove("drawer-open");
+    document.body.classList.remove("drawer-subnav-open");
+    document.body.classList.remove("drawer-filters-open");
     document.getElementById("modal-overlay").classList.remove("active");
     const menuBtn = document.getElementById("menu-toggle");
     menuBtn.textContent = "☰";
