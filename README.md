@@ -1,9 +1,13 @@
 # NegociosPR
 
+> ⚠️ **Project status (2026-06-17): On hold / discontinued.** During naming investigation we discovered [PR Local by JaydevsPR LLC](https://prlocal.app) — a near-identical bilingual directory already published on App Store + Google Play with the same vision (local businesses + tourism in PR's 78 municipios). Continuing under this name space would create app store conflicts, user confusion, and unfair competition with a project that has more resources. Repo is preserved as portfolio + future reference; all 3 open issues closed as wontfix. See `memory/2026-06-17.md` round 21 and `investigations/prlocal/REPORT.md` for the full story.
+
+---
+
 > Directorio interactivo de pequeños negocios locales en Puerto Rico. Bilingüe (español-PR / inglés), mobile-first, con mapa y filtros potentes.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE)
-[![Estado: Fase 1](https://img.shields.io/badge/estado-fase%201%20mockup-amber.svg)](#estado)
+[![Status: on hold](https://img.shields.io/badge/status-on%20hold-lightgrey.svg)](#estado)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Bilingüe](https://img.shields.io/badge/i18n-es--PR%20%2F%20en-blue.svg)](./assets/i18n/)
 
@@ -27,9 +31,9 @@ El proyecto nace con la idea de que **los pequeños negocios de PR merecen tener
 
 ## Estado
 
-**Fase 1 — Mockup visual** ✅
+**Proyecto en pausa / descontinuado (2026-06-17).** Ver el banner arriba para el contexto completo.
 
-El front-end completo está listo con 12 negocios de muestra (ficticios pero realistas, distribuidos por toda la isla) y los 78 municipios cargados. La idea es validar el look & feel con la comunidad antes de invertir tiempo en el backend.
+El frontend completo quedó listo (v0.2.0): 12 negocios de muestra (ficticios pero realistas, distribuidos por toda la isla), los 78 municipios cargados, 25 categorías, 9 grupos de filtros, mobile-first con topbar fijo + hero dismissable, bilingüe ES-PR/EN, tema claro/oscuro/auto, PWA-ready.
 
 | Fase | Qué incluye | Estado |
 |------|------------|--------|
