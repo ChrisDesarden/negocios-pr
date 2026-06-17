@@ -17,7 +17,9 @@
     "about": "Acerca",
     "search_placeholder": "Buscar por nombre, producto o pueblo...",
     "open_menu": "Abrir menú",
-    "close_menu": "Cerrar menú"
+    "close_menu": "Cerrar menú",
+    "close_filters": "Cerrar filtros",
+    "close": "Cerrar"
   },
   "filters": {
     "title": "Filtros",

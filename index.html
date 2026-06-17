@@ -40,8 +40,14 @@
       </div>
     </header>
 
-    <!-- Sub navigation -->
-    <nav id="subnav" class="subnav">
+    <!-- Sub navigation (full-screen menu on mobile) -->
+    <nav id="subnav" class="subnav" aria-label="Main navigation">
+      <div class="subnav-head">
+        <span class="subnav-title" data-i18n="hero.title">Descubre Puerto Rico</span>
+        <button id="subnav-close" class="drawer-close" type="button" aria-label="Cerrar menú">
+          <span aria-hidden="true">✕</span>
+        </button>
+      </div>
       <a href="#/explorar" data-view="explore" data-i18n="nav.explore" class="active">Explorar</a>
       <a href="#/someter" data-view="submit" data-i18n="nav.submit">Someter negocio</a>
       <a href="#/acerca" data-view="about" data-i18n="nav.about">Acerca</a>
@@ -73,6 +79,9 @@
 
           <!-- Filters -->
           <aside id="filters" class="filters">
+            <button id="filters-close" class="drawer-close filters-close" type="button" aria-label="Cerrar filtros">
+              <span aria-hidden="true">✕</span>
+            </button>
             <h2>
               <span data-i18n="filters.title">Filtros</span>
               <button id="reset-filters" class="reset" data-i18n="filters.reset">Limpiar</button>

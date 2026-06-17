@@ -543,7 +543,16 @@ function initMap() {
   if (mapInitialized) return;
   const el = document.getElementById("map-pane");
   if (!el) return;  // not in DOM (different view)
-  map = L.map("map-pane", { scrollWheelZoom: true }).setView([18.2208, -66.5901], 9);
+  // On mobile: disable drag so vertical swipes scroll the page instead of
+  // panning the map. touch-action: pan-x on the container still allows
+  // horizontal swipes to pan (Leaflet respects touch-action). Wheel zoom
+  // is also off on mobile so the user can scroll the page past the map.
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  map = L.map("map-pane", {
+    scrollWheelZoom: !isMobile,
+    dragging: !isMobile,
+    tap: !isMobile
+  }).setView([18.2208, -66.5901], 9);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
     maxZoom: 19
@@ -850,22 +859,29 @@ async function boot() {
     });
   });
 
-  // Mobile menu toggle
+  // Mobile menu toggle (hamburger)
   document.getElementById("menu-toggle").addEventListener("click", () => {
     const subnav = document.getElementById("subnav");
     const filters = document.getElementById("filters");
     const isOpen = subnav.classList.contains("open");
     const menuBtn = document.getElementById("menu-toggle");
-    // Close any other open drawer first
+    // Close any other open drawer first (mutual exclusion)
     filters.classList.remove("open");
     // Toggle subnav
     if (isOpen) {
       closeDrawer();
       menuBtn.textContent = "☰";
+      menuBtn.setAttribute("aria-label", t("nav.open_menu"));
     } else {
       openDrawer("subnav");
       menuBtn.textContent = "✕";
+      menuBtn.setAttribute("aria-label", t("nav.close_menu"));
     }
+  });
+
+  // Close button inside the subnav (visible on mobile when subnav is open)
+  document.getElementById("subnav-close")?.addEventListener("click", () => {
+    closeDrawer();
   });
 
   // Lang switch
@@ -923,7 +939,7 @@ async function boot() {
     const filters = document.getElementById("filters");
     const subnav = document.getElementById("subnav");
     const isOpen = filters.classList.contains("open");
-    // Close any other open drawer first
+    // Close any other open drawer first (mutual exclusion)
     subnav.classList.remove("open");
     // Toggle filters
     if (isOpen) {
@@ -932,6 +948,51 @@ async function boot() {
       openDrawer("filters");
     }
   });
+
+  // Close button inside the filter drawer (visible on mobile)
+  document.getElementById("filters-close")?.addEventListener("click", () => {
+    closeDrawer();
+  });
+
+  // Swipe down on the filter drawer drag handle to close it
+  // (only triggers when starting near the top of the drawer, where the
+  // ::before handle is rendered)
+  (() => {
+    const filters = document.getElementById("filters");
+    if (!filters) return;
+    let startY = 0, startT = 0, dragging = false;
+    filters.addEventListener("touchstart", (e) => {
+      // Only start drag if the touch is in the top 32px (where the handle is)
+      const rect = filters.getBoundingClientRect();
+      const touchY = e.touches[0].clientY - rect.top;
+      if (touchY < 32) {
+        startY = e.touches[0].clientY;
+        startT = Date.now();
+        dragging = true;
+      }
+    }, { passive: true });
+    filters.addEventListener("touchmove", (e) => {
+      if (!dragging) return;
+      const dy = e.touches[0].clientY - startY;
+      // As the user drags down, slide the sheet with their finger
+      if (dy > 0) {
+        filters.style.transform = `translateY(${dy}px)`;
+      }
+    }, { passive: true });
+    filters.addEventListener("touchend", (e) => {
+      if (!dragging) return;
+      const dy = (e.changedTouches[0].clientY - startY);
+      const dt = Date.now() - startT;
+      // Close if dragged more than 80px down OR fast downward swipe
+      if (dy > 80 || (dy > 30 && dt < 250)) {
+        closeDrawer();
+      } else {
+        // Snap back to open position
+        filters.style.transform = '';
+      }
+      dragging = false;
+    });
+  })();
 
   // Open a drawer with body scroll-lock that preserves the current scroll position
   // (iOS/macOS don't honor overflow:hidden for body scroll, so we use position:fixed)
@@ -943,13 +1004,16 @@ async function boot() {
     document.getElementById("modal-overlay").classList.add("active");
   }
 
-  // Close any open drawer (called by overlay tap and other interactions)
+  // Close any open drawer (called by overlay tap, close buttons, Escape, swipe-down)
   function closeDrawer() {
     document.getElementById("subnav").classList.remove("open");
     document.getElementById("filters").classList.remove("open");
+    document.getElementById("filters").style.transform = "";
     document.body.classList.remove("drawer-open");
     document.getElementById("modal-overlay").classList.remove("active");
-    document.getElementById("menu-toggle").textContent = "☰";
+    const menuBtn = document.getElementById("menu-toggle");
+    menuBtn.textContent = "☰";
+    menuBtn.setAttribute("aria-label", t("nav.open_menu"));
     // Restore scroll position
     const scrollY = document.body.dataset.scrollY;
     if (scrollY) {

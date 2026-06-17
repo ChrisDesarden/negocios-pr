@@ -17,7 +17,9 @@
     "about": "About",
     "search_placeholder": "Search by name, product, or town...",
     "open_menu": "Open menu",
-    "close_menu": "Close menu"
+    "close_menu": "Close menu",
+    "close_filters": "Close filters",
+    "close": "Close"
   },
   "filters": {
     "title": "Filters",
