@@ -28,6 +28,11 @@
   --success: #34c759;
   --scrollbar-thumb: rgba(0, 0, 0, 0.28);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.50);
+  --mobile-drawer-bg: rgba(255, 255, 255, 0.96);
+  --mobile-drawer-head-bg: rgba(255, 255, 255, 0.98);
+  --mobile-drawer-hover: rgba(0, 0, 0, 0.04);
+  --mobile-drawer-active-bg: rgba(0, 131, 143, 0.08);
+  --modal-overlay-bg: rgba(0, 0, 0, 0.3);
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
@@ -71,6 +76,11 @@
   --shadow-xl: 0 24px 56px rgba(0, 0, 0, 0.6), 0 8px 20px rgba(0, 0, 0, 0.4);
   --scrollbar-thumb: rgba(255, 255, 255, 0.25);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.45);
+  --mobile-drawer-bg: rgba(28, 28, 30, 0.96);
+  --mobile-drawer-head-bg: rgba(28, 28, 30, 0.98);
+  --mobile-drawer-hover: rgba(255, 255, 255, 0.06);
+  --mobile-drawer-active-bg: rgba(0, 212, 224, 0.10);
+  --modal-overlay-bg: rgba(0, 0, 0, 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -100,6 +110,11 @@
     --shadow-xl: 0 24px 56px rgba(0, 0, 0, 0.6), 0 8px 20px rgba(0, 0, 0, 0.4);
     --scrollbar-thumb: rgba(255, 255, 255, 0.25);
     --scrollbar-thumb-hover: rgba(255, 255, 255, 0.45);
+    --mobile-drawer-bg: rgba(28, 28, 30, 0.96);
+    --mobile-drawer-head-bg: rgba(28, 28, 30, 0.98);
+    --mobile-drawer-hover: rgba(255, 255, 255, 0.06);
+    --mobile-drawer-active-bg: rgba(0, 212, 224, 0.10);
+    --modal-overlay-bg: rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -1069,7 +1084,7 @@ footer {
 
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--modal-overlay-bg);
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
   z-index: 95;
@@ -1080,9 +1095,6 @@ footer {
 .modal-overlay.active {
   opacity: 1;
   pointer-events: auto;
-}
-[data-theme="dark"] .modal-overlay {
-  background: rgba(0, 0, 0, 0.6);
 }
 
 /* Map is the lowest UI element. No z-index means it sits in normal flow
@@ -1164,7 +1176,7 @@ body.drawer-open {
     align-items: stretch;
     gap: 4px;
     padding: 0;
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--mobile-drawer-bg);
     -webkit-backdrop-filter: saturate(180%) blur(28px);
     backdrop-filter: saturate(180%) blur(28px);
     border: none;
@@ -1176,9 +1188,6 @@ body.drawer-open {
     opacity: 0;
     transition: transform 0.25s var(--ease-out), opacity 0.2s var(--ease);
   }
-  [data-theme="dark"] .subnav {
-    background: rgba(28, 28, 30, 0.96);
-  }
   .subnav.open {
     display: flex;
     transform: translateY(0);
@@ -1187,16 +1196,13 @@ body.drawer-open {
   .subnav .subnav-head {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 16px;
-    background: rgba(255, 255, 255, 0.98);
+    background: var(--mobile-drawer-head-bg);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     backdrop-filter: saturate(180%) blur(20px);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
     z-index: 1;
-  }
-  [data-theme="dark"] .subnav .subnav-head {
-    background: rgba(28, 28, 30, 0.98);
   }
   .subnav .subnav-title {
     font-size: 1.05rem; font-weight: 700;
@@ -1211,11 +1217,10 @@ body.drawer-open {
     color: var(--text);
   }
   .subnav a:last-of-type { border-bottom: none; }
-  .subnav a:hover { background: rgba(0, 0, 0, 0.04); }
-  [data-theme="dark"] .subnav a:hover { background: rgba(255, 255, 255, 0.06); }
+  .subnav a:hover { background: var(--mobile-drawer-hover); }
   .subnav a.active {
     color: var(--primary);
-    background: rgba(0, 131, 143, 0.08);
+    background: var(--mobile-drawer-active-bg);
   }
 
   .lang-switch button, .theme-switch button { padding: 4px 8px; }
@@ -1249,12 +1254,9 @@ body.drawer-open {
     transition: transform 0.3s var(--ease-out);
     box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
     padding: 48px 16px calc(20px + env(safe-area-inset-bottom, 0));
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--mobile-drawer-bg);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     backdrop-filter: saturate(180%) blur(20px);
-  }
-  [data-theme="dark"] .filters {
-    background: rgba(28, 28, 30, 0.96);
   }
   .filters.open { transform: translateY(0); }
   /* Add a drag handle on top of the filter drawer */
@@ -1323,26 +1325,4 @@ html { scroll-behavior: smooth; }
 ::selection {
   background: var(--primary-soft);
   color: var(--primary);
-}
-
-/* Auto theme: when the system preference is dark AND the user hasn't
-   explicitly chosen light, apply the dark drawer backgrounds. This
-   matches the :root:not([data-theme="light"]) pattern used for
-   variables up top. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .subnav {
-    background: rgba(28, 28, 30, 0.96);
-  }
-  :root:not([data-theme="light"]) .subnav .subnav-head {
-    background: rgba(28, 28, 30, 0.98);
-  }
-  :root:not([data-theme="light"]) .subnav a:hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
-  :root:not([data-theme="light"]) .filters {
-    background: rgba(28, 28, 30, 0.96);
-  }
-  :root:not([data-theme="light"]) .modal-overlay {
-    background: rgba(0, 0, 0, 0.6);
-  }
 }
