@@ -1,0 +1,19 @@
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Node / build artifacts
+node_modules/
+*.log
+
+# Python (test scripts)
+__pycache__/
+*.pyc
+*.pyo

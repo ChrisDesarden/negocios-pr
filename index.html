@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es-PR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Directorio abierto de pequeños negocios locales en Puerto Rico — restaurantes, chinchorros, ferreterías, fruterías, talleres y más. Bilingüe español / inglés.">
+  <meta name="theme-color" content="#0d6e6e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="NegociosPR">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🍞</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <title>NegociosPR — Directorio de pequeños negocios</title>
+</head>
+<body>
+  <div class="app">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <button id="menu-toggle" class="menu-toggle" aria-label="Abrir menú">☰</button>
+      <a href="#/explorar" class="brand" onclick="event.preventDefault(); showExplore();" style="color: inherit;">
+        <span class="logo">Negocios<span class="accent">PR</span></span>
+        <span class="tag" data-i18n="site.tagline">Directorio de pequeños negocios</span>
+      </a>
+      <div class="search">
+        <input id="search-input" type="search" data-i18n-ph="nav.search_placeholder" placeholder="Buscar por nombre, producto o pueblo..." aria-label="Buscar">
+      </div>
+      <div class="lang-switch" role="group" aria-label="Idioma">
+        <button data-lang="es" class="active">ES</button>
+        <button data-lang="en">EN</button>
+      </div>
+      <div class="theme-switch" role="group" aria-label="Tema">
+        <button data-theme="auto" title="Sigue el tema del sistema" aria-label="Tema automático">◐</button>
+        <button data-theme="light" title="Tema claro" aria-label="Tema claro">☀</button>
+        <button data-theme="dark" title="Tema oscuro" aria-label="Tema oscuro">☾</button>
+      </div>
+    </header>
+
+    <!-- Sub navigation -->
+    <nav id="subnav" class="subnav">
+      <a href="#/explorar" data-view="explore" data-i18n="nav.explore" class="active">Explorar</a>
+      <a href="#/someter" data-view="submit" data-i18n="nav.submit">Someter negocio</a>
+      <a href="#/acerca" data-view="about" data-i18n="nav.about">Acerca</a>
+    </nav>
+
+    <main>
+
+      <!-- EXPLORE VIEW -->
+      <section id="view-explore" class="view active">
+        <div class="explore-hero">
+          <h1 data-i18n="hero.title">Descubre Puerto Rico</h1>
+          <p data-i18n="hero.subtitle">Encuentra restaurantes, chinchorros, ferreterías, fruterías y todos los negocios locales de la isla.</p>
+          <div class="hero-stats" id="hero-stats">
+            <div class="stat">
+              <span class="stat-num" id="stat-count">0</span>
+              <span class="stat-label" data-i18n="hero.stat_businesses">Negocios</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num">78</span>
+              <span class="stat-label" data-i18n="hero.stat_municipalities">Municipios</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num">25</span>
+              <span class="stat-label" data-i18n="hero.stat_categories">Categorías</span>
+            </div>
+          </div>
+        </div>
+        <div class="explore-layout">
+
+          <!-- Filters -->
+          <aside id="filters" class="filters">
+            <h2>
+              <span data-i18n="filters.title">Filtros</span>
+              <button id="reset-filters" class="reset" data-i18n="filters.reset">Limpiar</button>
+            </h2>
+            <button id="toggle-all-filters" class="toggle-all" type="button" aria-expanded="true">
+              <span class="toggle-icon" aria-hidden="true">
+                <span class="bar bar-h"></span>
+                <span class="bar bar-v"></span>
+              </span>
+              <span class="toggle-label" data-i18n="filters.collapse_all">Colapsar todo</span>
+            </button>
+
+            <details class="filter-group" open>
+              <summary><h3 data-i18n="filters.category">Categoría</h3></summary>
+              <div class="filter-body">
+                <div id="filter-categories" class="chip-row"></div>
+              </div>
+            </details>
+
+            <details class="filter-group" open>
+              <summary><h3 data-i18n="filters.municipality">Municipio</h3></summary>
+              <div class="filter-body">
+                <div class="combo" id="municipality-combo">
+                  <input type="text" class="combo-input" id="municipality-input"
+                         data-i18n-ph="filters.municipality_ph" placeholder="Buscar municipio..." autocomplete="off">
+                  <button type="button" class="combo-clear" id="municipality-clear" aria-label="Limpiar">✕</button>
+                  <div class="combo-list" id="municipality-list" role="listbox"></div>
+                </div>
+              </div>
+            </details>
+
+            <details class="filter-group" open>
+              <summary><h3 data-i18n="filters.price">Precio</h3></summary>
+              <div class="filter-body">
+                <div id="filter-price" class="chip-row"></div>
+              </div>
+            </details>
+
+            <details class="filter-group" open>
+              <summary><h3 data-i18n="filters.schedule">Horario</h3></summary>
+              <div class="filter-body">
+                <label class="checkbox-row">
+                  <input type="checkbox" id="check-open-now">
+                  <span class="check-box" aria-hidden="true">
+                    <svg viewBox="0 0 16 16"><path d="M3 8.5 L6.5 12 L13 4"/></svg>
+                  </span>
+                  <span data-i18n="filters.open_now">Abierto ahora</span>
+                </label>
+              </div>
+            </details>
+
+            <details class="filter-group" open>
+              <summary><h3 data-i18n="filters.payment">Métodos de pago</h3></summary>
+              <div class="filter-body">
+                <div id="filter-payment" class="chip-row"></div>
+              </div>
+            </details>
+
+            <details class="filter-group" open>
+              <summary><h3 data-i18n="filters.services">Servicios</h3></summary>
+              <div class="filter-body">
+                <div id="filter-services" class="chip-row"></div>
+              </div>
+            </details>
+
+            <details class="filter-group" open>
+              <summary><h3 data-i18n="filters.languages">Idiomas hablados</h3></summary>
+              <div class="filter-body">
+                <div id="filter-languages" class="chip-row"></div>
+              </div>
+            </details>
+
+            <details class="filter-group" open>
+              <summary><h3 data-i18n="filters.accessibility">Accesibilidad</h3></summary>
+              <div class="filter-body">
+                <div id="filter-access" class="chip-row"></div>
+              </div>
+            </details>
+
+            <details class="filter-group" open>
+              <summary><h3 data-i18n="filters.verified">Verificación</h3></summary>
+              <div class="filter-body">
+                <label class="checkbox-row">
+                  <input type="checkbox" id="check-verified">
+                  <span class="check-box" aria-hidden="true">
+                    <svg viewBox="0 0 16 16"><path d="M3 8.5 L6.5 12 L13 4"/></svg>
+                  </span>
+                  <span data-i18n="filters.verified">Solo negocios verificados</span>
+                </label>
+              </div>
+            </details>
+          </aside>
+
+          <!-- Results -->
+          <div class="results">
+            <div class="results-header">
+              <div>
+                <span class="count" id="results-count">—</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button id="filter-toggle" class="filter-toggle">⚙ <span data-i18n="filters.title">Filtros</span></button>
+                <div class="view-toggle" role="group" aria-label="Vista">
+                  <button data-view="map" class="active">🗺️ <span data-i18n="nav.explore">Mapa</span></button>
+                  <button data-view="list">☰ <span>Lista</span></button>
+                </div>
+              </div>
+            </div>
+            <div id="map-pane" class="map-pane"></div>
+            <div id="list-pane" class="list-pane"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DETAIL VIEW -->
+      <section id="view-detail" class="view"></section>
+
+      <!-- SUBMIT VIEW -->
+      <section id="view-submit" class="view">
+        <form id="form-submit" class="submit-form" novalidate>
+          <h1 data-i18n="submit.title">Someter un negocio nuevo</h1>
+          <p class="intro" data-i18n="submit.intro">Completa la información del negocio. Un moderador lo revisará antes de publicarlo.</p>
+
+          <fieldset>
+            <legend data-i18n="submit.section_business">Información del negocio</legend>
+            <div class="field">
+              <label for="form-name" data-i18n="submit.name_label">Nombre del negocio</label>
+              <input id="form-name" name="name" required data-i18n-ph="submit.name_ph">
+            </div>
+            <div class="field">
+              <label for="form-category" data-i18n="submit.category_label">Categoría</label>
+              <select id="form-category" name="category" required></select>
+            </div>
+            <div class="field">
+              <label for="form-description" data-i18n="submit.description_label">Descripción</label>
+              <textarea id="form-description" name="description" rows="3" data-i18n-ph="submit.description_ph"></textarea>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend data-i18n="submit.section_owner">Información del dueño</legend>
+            <div class="field">
+              <label for="form-owner" data-i18n="submit.owner_label">Tu nombre</label>
+              <input id="form-owner" name="owner" required data-i18n-ph="submit.owner_ph">
+            </div>
+            <div class="field">
+              <label for="form-email" data-i18n="submit.email_label">Correo electrónico</label>
+              <input id="form-email" name="email" type="email" required data-i18n-ph="submit.email_ph">
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend data-i18n="submit.section_products">Productos y servicios</legend>
+            <div class="field">
+              <label for="form-products" data-i18n="submit.products_label">Productos o servicios principales</label>
+              <input id="form-products" name="products" data-i18n-ph="submit.products_ph">
+            </div>
+            <div class="field">
+              <label for="form-menu" data-i18n="submit.menu_label">Menú (opcional)</label>
+              <textarea id="form-menu" name="menu" rows="4" data-i18n-ph="submit.menu_ph"></textarea>
+            </div>
+            <div class="field">
+              <label for="form-hours" data-i18n="submit.hours_label">Horario de operación</label>
+              <input id="form-hours" name="hours" data-i18n-ph="submit.hours_ph">
+            </div>
+            <div class="field">
+              <label data-i18n="submit.payment_label">Métodos de pago aceptados</label>
+              <div id="form-payment" class="checkbox-group"></div>
+            </div>
+            <div class="field">
+              <label data-i18n="submit.services_label">Servicios ofrecidos</label>
+              <div id="form-services" class="checkbox-group"></div>
+            </div>
+            <div class="field">
+              <label data-i18n="submit.languages_label">Idiomas que hablas</label>
+              <div id="form-languages" class="checkbox-group"></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend data-i18n="submit.section_location">Ubicación y contacto</legend>
+            <div class="field">
+              <label for="form-municipality" data-i18n="submit.municipality_label">Municipio</label>
+              <select id="form-municipality" name="municipality" required></select>
+            </div>
+            <div class="field">
+              <label for="form-address" data-i18n="submit.address_label">Dirección</label>
+              <input id="form-address" name="address" data-i18n-ph="submit.address_ph">
+            </div>
+            <div class="field">
+              <label for="form-phone" data-i18n="submit.phone_label">Teléfono</label>
+              <input id="form-phone" name="phone" type="tel" data-i18n-ph="submit.phone_ph">
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend data-i18n="submit.section_photos">Fotos</legend>
+            <div class="field">
+              <label for="form-photos" data-i18n="submit.photos_label">Fotos del lugar</label>
+              <input id="form-photos" name="photos" type="file" accept="image/*" multiple style="display:none;">
+              <label for="form-photos" class="photo-upload">
+                📷 <span data-i18n="submit.photos_label">Fotos del lugar</span>
+                <div class="help" data-i18n="submit.photos_help">Hasta 6 fotos, máximo 5 MB cada una</div>
+              </label>
+              <div id="form-photos-preview" class="photo-preview"></div>
+            </div>
+          </fieldset>
+
+          <button type="submit" class="btn primary" data-i18n="submit.submit_button">Enviar solicitud</button>
+          <div id="form-status" class="form-status"></div>
+        </form>
+      </section>
+
+      <!-- ABOUT VIEW -->
+      <section id="view-about" class="view">
+        <div class="about">
+          <h1 data-i18n="about.title">Acerca de NegociosPR</h1>
+          <p data-i18n="about.p1"></p>
+          <p data-i18n="about.p2"></p>
+          <p data-i18n="about.p3"></p>
+          <p data-i18n="about.p4"></p>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <div data-i18n="site.footer">Hecho con cariño en Puerto Rico 🇵🇷</div>
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
