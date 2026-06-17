@@ -284,6 +284,12 @@ body.drawer-subnav-open #menu-toggle {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+/* The subnav-head (with the "Descubre Puerto Rico" title and X close
+   button) is only for the mobile full-screen drawer, not for the
+   desktop pill nav. On desktop it's just a regular div that would
+   show as a horizontal block with extra text and a useless close
+   button next to the nav pills. */
+.subnav .subnav-head { display: none; }
 .subnav::-webkit-scrollbar { display: none; }
 .subnav a {
   padding: 8px 16px; border-radius: var(--radius-full);
