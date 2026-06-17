@@ -168,8 +168,11 @@ function showView(name) {
   } else if (name === "about" && location.hash !== "#/acerca") {
     history.pushState({ view: "about" }, "", "#/acerca");
   }
-  // close mobile menu
+  // close mobile menu + filter drawer
   document.getElementById("subnav").classList.remove("open");
+  document.getElementById("filters").classList.remove("open");
+  document.body.classList.remove("drawer-open");
+  document.getElementById("modal-overlay")?.classList.remove("active");
   if (name === "explore") renderList();
   if (name === "detail") renderDetail();
   if (name === "submit") renderForm();
@@ -849,7 +852,20 @@ async function boot() {
 
   // Mobile menu toggle
   document.getElementById("menu-toggle").addEventListener("click", () => {
-    document.getElementById("subnav").classList.toggle("open");
+    const subnav = document.getElementById("subnav");
+    const filters = document.getElementById("filters");
+    const isOpen = subnav.classList.contains("open");
+    const menuBtn = document.getElementById("menu-toggle");
+    // Close any other open drawer first
+    filters.classList.remove("open");
+    // Toggle subnav
+    if (isOpen) {
+      closeDrawer();
+      menuBtn.textContent = "☰";
+    } else {
+      openDrawer("subnav");
+      menuBtn.textContent = "✕";
+    }
   });
 
   // Lang switch
@@ -904,7 +920,52 @@ async function boot() {
 
   // Filter toggle (mobile)
   document.getElementById("filter-toggle").addEventListener("click", () => {
-    document.getElementById("filters").classList.toggle("open");
+    const filters = document.getElementById("filters");
+    const subnav = document.getElementById("subnav");
+    const isOpen = filters.classList.contains("open");
+    // Close any other open drawer first
+    subnav.classList.remove("open");
+    // Toggle filters
+    if (isOpen) {
+      closeDrawer();
+    } else {
+      openDrawer("filters");
+    }
+  });
+
+  // Open a drawer with body scroll-lock that preserves the current scroll position
+  // (iOS/macOS don't honor overflow:hidden for body scroll, so we use position:fixed)
+  function openDrawer(which) {
+    const scrollY = window.scrollY;
+    document.body.dataset.scrollY = String(scrollY);
+    document.body.classList.add("drawer-open");
+    document.getElementById(which).classList.add("open");
+    document.getElementById("modal-overlay").classList.add("active");
+  }
+
+  // Close any open drawer (called by overlay tap and other interactions)
+  function closeDrawer() {
+    document.getElementById("subnav").classList.remove("open");
+    document.getElementById("filters").classList.remove("open");
+    document.body.classList.remove("drawer-open");
+    document.getElementById("modal-overlay").classList.remove("active");
+    document.getElementById("menu-toggle").textContent = "☰";
+    // Restore scroll position
+    const scrollY = document.body.dataset.scrollY;
+    if (scrollY) {
+      window.scrollTo(0, parseInt(scrollY, 10));
+      delete document.body.dataset.scrollY;
+    }
+  }
+
+  // Tap outside the drawer to close it
+  document.getElementById("modal-overlay").addEventListener("click", closeDrawer);
+
+  // Escape key closes the active drawer
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.body.classList.contains("drawer-open")) {
+      closeDrawer();
+    }
   });
 
   // View toggle (list / map)
