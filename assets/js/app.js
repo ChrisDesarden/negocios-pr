@@ -134,6 +134,9 @@ function applyI18n() {
   document.querySelectorAll("[data-i18n-title]").forEach(el => {
     el.setAttribute("title", t(el.getAttribute("data-i18n-title")));
   });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+    el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria")));
+  });
   // Update lang switch
   document.querySelectorAll(".lang-switch button").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.lang === currentLang);
@@ -907,6 +910,22 @@ async function boot() {
   if (savedLang && i18n[savedLang]) currentLang = savedLang;
   const savedTheme = localStorage.getItem("negociospr-theme");
   if (savedTheme && ["auto", "light", "dark"].includes(savedTheme)) currentTheme = savedTheme;
+
+  // Restore hero-dismissed state. When the user clicks the ✕ on the
+  // mobile hero strip, the choice is persisted here so repeat visits
+  // (and the upcoming Android/iOS app build) skip straight to the map.
+  if (localStorage.getItem("negociospr.hero.dismissed") === "1") {
+    document.getElementById("explore-hero")?.classList.add("dismissed");
+  }
+  // Wire up the dismiss button (mobile only — it's display:none on desktop).
+  document.getElementById("hero-dismiss")?.addEventListener("click", () => {
+    document.getElementById("explore-hero")?.classList.add("dismissed");
+    localStorage.setItem("negociospr.hero.dismissed", "1");
+    // After collapsing the hero, the page is now short enough that
+    // scroll position may point past the new end. Reset to 0 so the
+    // user sees the map from the top.
+    window.scrollTo(0, 0);
+  });
 
   // Bind search
   document.getElementById("search-input").addEventListener("input", e => {

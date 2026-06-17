@@ -169,11 +169,26 @@ input:focus, select:focus, textarea:focus {
    Layout shell
    ========================================================================== */
 
-.app { min-height: 100vh; display: flex; flex-direction: column; }
+.app {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  /* Reserve space for the fixed topbar (defined per-viewport via
+     --topbar-h: 69px desktop, 161px mobile). Without this, the
+     page content would slide under the fixed topbar. */
+  padding-top: var(--topbar-h, 69px);
+}
 
-/* Topbar — Apple-style frosted glass */
+/* Topbar — Apple-style frosted glass.
+   `position: fixed` instead of sticky so it always occupies the first
+   `--topbar-h` pixels at the top of the viewport. This guarantees that
+   the results-header (sticky; top: var(--topbar-h)) always sits flush
+   below the topbar with no visual gap when scrolling. (When the
+   results-header was sticky under a sticky topbar, moderate scroll
+   values left a ~38px gap because the results-header hadn't reached
+   its sticky offset yet.) */
 .topbar {
-  position: sticky; top: 0; z-index: 50;
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
   display: flex; align-items: center; gap: 16px;
   padding: 14px 28px;
   background: var(--bg-glass);
@@ -323,7 +338,37 @@ main { flex: 1; display: flex; flex-direction: column; }
   padding: 56px 28px 32px;
   text-align: center;
   background: linear-gradient(180deg, var(--primary-soft) 0%, transparent 100%);
+  position: relative;
 }
+
+/* Dismiss button (✕) for the hero banner. Hidden by default; only
+   styled and shown on mobile where the hero becomes a compact strip.
+   Clicking persists `negociospr.hero.dismissed = true` in localStorage
+   so the hero stays hidden on this device — useful for repeat users
+   who want to skip straight to the map, and essential for the upcoming
+   Android/iOS app where the hero has no purpose. */
+.hero-dismiss {
+  display: none; /* shown only on mobile via media query */
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 28px; height: 28px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  align-items: center; justify-content: center;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.hero-dismiss:hover { background: var(--bg-elev); color: var(--text); }
+.hero-dismiss:active { transform: scale(0.92); }
+
+/* When the user dismisses the hero, collapse it entirely so the map
+   fills the screen. We keep it in the DOM (display:none) rather than
+   removing it, so toggling back is trivial if we ever want to. */
+.explore-hero.dismissed { display: none; }
 .explore-hero h1 {
   font-size: clamp(2.5rem, 6vw, 3.75rem);
   font-weight: 700;
@@ -1251,11 +1296,39 @@ body.drawer-open {
   .brand .tag { display: none; }
   .search { order: 3; width: 100%; flex-basis: 100%; max-width: none; margin: 0; }
 
-  .explore-hero { padding: 40px 20px 24px; }
-  .explore-hero h1 { font-size: 2.25rem; }
-  .explore-hero p { font-size: 1.05rem; }
-  .hero-stats { padding: 12px 20px; gap: 20px; }
-  .hero-stats .stat-num { font-size: 1.2rem; }
+  .explore-hero {
+    /* Mobile: compact strip instead of a tall landing hero.
+       Was 40px 20px 24px = ~280px tall with big h1 + paragraph + stats.
+       Now ~58px tall (just the title + inline stats) — about 5x less
+       vertical space. This makes the map visible immediately on mobile
+       load and prevents the "CATEGORÍAS orphan" gap when scrolling
+       (the hero now exits the viewport cleanly instead of leaving a
+       partial stats label behind between topbar and results-header).
+       Clicking the ✕ dismisses the strip and the choice persists in
+       localStorage (see app.js). */
+    padding: 14px 36px 14px 16px; /* extra right padding for the ✕ button */
+  }
+  .explore-hero h1 {
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .explore-hero p {
+    /* Hide the long subtitle on mobile — the title + stats convey
+       enough on a 393px screen, and removing this saves ~60px of
+       vertical space. */
+    display: none;
+  }
+  .hero-stats {
+    padding: 6px 12px;
+    gap: 14px;
+  }
+  .hero-stats .stat-num { font-size: 0.95rem; }
+  .hero-stats .stat-label { font-size: 0.65rem; }
+
+  /* Show the dismiss button only on mobile (desktop has plenty of
+     room and the hero is short anyway). */
+  .hero-dismiss { display: inline-flex; }
 
   .explore-layout { grid-template-columns: 1fr; }
 
